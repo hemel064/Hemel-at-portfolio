@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Dodge | Hemel</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#030712;
+overflow:hidden;
+color:white;
+text-align:center;
+}
+
+canvas{
+background:linear-gradient(to bottom,#020617,#0f172a);
+display:block;
+margin:auto;
+border:2px solid #00f7ff;
+box-shadow:0 0 20px #00f7ff;
+}
+
+h1{
+padding:15px;
+color:#00f7ff;
+text-shadow:0 0 10px #00f7ff;
+}
+
+.score{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.controls{
+display:flex;
+justify-content:center;
+gap:20px;
+margin-top:15px;
+}
+
+.btn{
+width:80px;
+height:80px;
+border-radius:50%;
+border:none;
+font-size:30px;
+background:#00f7ff;
+color:black;
+font-weight:bold;
+box-shadow:0 0 20px #00f7ff;
+}
+
+.gameover{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:rgba(0,0,0,0.9);
+padding:30px;
+border-radius:20px;
+display:none;
+}
+
+.gameover button{
+padding:12px 25px;
+margin-top:15px;
+border:none;
+border-radius:30px;
+background:#00f7ff;
+font-weight:bold;
+}
+
+@media(min-width:768px){
+.controls{
+display:none;
+}
+}
+</style>
+</head>
+<body>
+
+<h1>🚀 Space Dodge</h1>
+<div class="score">Score: <span id="score">0</span></div>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<div class="controls">
+<button class="btn" id="leftBtn">◀</button>
+<button class="btn" id="rightBtn">▶</button>
+</div>
+
+<div class="gameover" id="gameOver">
+<h2>Game Over</h2>
+<p>Your spaceship crashed!</p>
+<button onclick="restartGame()">Play Again</button>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const scoreEl = document.getElementById('score');
+const gameOverBox = document.getElementById('gameOver');
+
+let score = 0;
+let gameRunning = true;
+
+const player = {
+  x:180,
+  y:520,
+  width:40,
+  height:60,
+  speed:7
+};
+
+const meteors = [];
+
+function drawPlayer(){
+  ctx.fillStyle='#00f7ff';
+
+  ctx.beginPath();
+  ctx.moveTo(player.x+20,player.y);
+  ctx.lineTo(player.x,player.y+60);
+  ctx.lineTo(player.x+40,player.y+60);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function createMeteor(){
+  meteors.push({
+    x:Math.random()*360,
+    y:-20,
+    radius:20,
+    speed:3+Math.random()*3
+  });
+}
+
+function drawMeteors(){
+  ctx.fillStyle='orange';
+
+  meteors.forEach((m,index)=>{
+    m.y += m.speed;
+
+    ctx.beginPath();
+    ctx.arc(m.x,m.y,m.radius,0,Math.PI*2);
+    ctx.fill();
+
+    if(
+      m.y + m.radius > player.y &&
+      m.x > player.x &&
+      m.x < player.x + player.width
+    ){
+      endGame();
+    }
+
+    if(m.y > 620){
+      meteors.splice(index,1);
+      score++;
+      scoreEl.innerText = score;
+    }
+  });
+}
+
+function drawStars(){
+  for(let i=0;i<80;i++){
+    ctx.fillStyle='white';
+    ctx.fillRect(Math.random()*400,Math.random()*600,2,2);
+  }
+}
+
+function gameLoop(){
+  if(!gameRunning) return;
+
+  ctx.clearRect(0,0,400,600);
+
+  drawStars();
+  drawPlayer();
+  drawMeteors();
+
+  requestAnimationFrame(gameLoop);
+}
+
+setInterval(()=>{
+  if(gameRunning){
+    createMeteor();
+  }
+},900);
+
+window.addEventListener('keydown',(e)=>{
+  if(e.key==='ArrowLeft' && player.x>0){
+    player.x -= player.speed*5;
+  }
+
+  if(e.key==='ArrowRight' && player.x<360){
+    player.x += player.speed*5;
+  }
+});
+
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+
+leftBtn.addEventListener('touchstart',()=>{
+  if(player.x>0){
+    player.x -= 40;
+  }
+});
+
+rightBtn.addEventListener('touchstart',()=>{
+  if(player.x<360){
+    player.x += 40;
+  }
+});
+
+function endGame(){
+  gameRunning=false;
+  gameOverBox.style.display='block';
+}
+
+function restartGame(){
+  location.reload();
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
